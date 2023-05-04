@@ -71,7 +71,7 @@ jobs:
 
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: cd backend && npm i
+        run: cd backend && npm i && chmod -R a+x node_modules
 
       - name: Run Unit test
         run: cd backend && npm test
