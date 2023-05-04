@@ -9,7 +9,7 @@
     "test": "jest",
     "build": "tsc",
     "postbuild": "cp package*.json build && cd build && npm ci --production",
-    "lint": "tslint -c tslint.json 'src/**/*.ts'"
+    "lint": "node tslint -c tslint.json 'src/**/*.ts'"
   },
   "keywords": [],
   "author": "",
