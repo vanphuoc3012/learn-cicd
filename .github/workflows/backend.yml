@@ -1,0 +1,183 @@
+name: Backend
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+    branches:
+      - main
+
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+    branches:
+      - main
+
+jobs:
+  be-build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Install Deps
+        run: cd backend && npm i
+
+      - name: Build Step
+        run: cd backend && npm run build
+
+      - name: Cache node modules
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+
+      - name: Generate Artifact
+        run: cd backend/build && zip -r artifact.zip ./ -x '*.git*'
+
+      - name: Store Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-artifact
+          path: backend/build/artifact.zip
+
+  be-lint:
+    name: 🕵️ Lint Backend Code
+    needs: [ be-build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cd backend && npm i
+
+      - name: Cache node modules
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+
+      - name: Lint the code
+        run: cd backend && npm run lint
+
+  be-test:
+    name: 🧪 Backend Unit Tests
+    needs: [ be-build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cd backend && npm i && chmod -R a+x node_modules
+
+      - name: Cache node modules
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+
+      - name: Run Unit test
+        run: cd backend && npm test
+
+  be-security-audit:
+    name: 🛡️ Audit Backend Packages for Security Vulnerabilities
+    needs: [ be-build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check for security issue
+        run: cd backend && npm audit --audit-level=high
+
+  static-analysis:
+    name: 🔬 Run Static Analysis on Backend Code
+    needs: [ be-build, be-lint, be-test, be-security-audit ]
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+      #          config-file: ./.github/codeql/codeql.config.yml
+      #
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Install Deps
+        run: cd backend && npm i
+
+      - name: Build
+        run: cd backend && npm run build
+
+      - name: Perform Analysis
+        uses: github/codeql-action/analyze@v2
+
+  deploy_to_eb:
+    name: Deploy Backend Code
+    needs: [be-build, be-lint, be-test, be-security-audit, static-analysis]
+    runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+
+      - name: Get Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: backend-artifact
+          path: backend/build
+
+      - name: Prepare ProcFile
+        run: |
+          echo "web: node server.js" > backend/build/Profile
+
+      - name: Prepare Zip
+        run: cd backend/build && ls && zip -r artifact.zip ./ -x '*.git*'
+
+      - name: Deploy to EB
+        id: deployment
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: PhuocFirstDeploy
+          environment_name: PhuocFirstDeploy-env
+          version_label: champa-${{ github.run_number }}
+          region: ap-southeast-1
+          deployment_package: backend/build/artifact.zip
+
+  verify-production:
+    runs-on: ubuntu-latest
+    needs: [deploy_to_eb]
+#    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Run Smoke Test
+        run: |
+          export BACKEND_URL=http://phuoc-first-deploy.ap-southeast-1.elasticbeanstalk.com/
+          cd ./backend/e2e
+          chmod +x backend-smoke.sh
+          ./backend-smoke.sh
