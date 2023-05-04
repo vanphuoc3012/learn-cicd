@@ -54,3 +54,24 @@ jobs:
 
       - name: Lint the code
         run: cd backend && npm run lint
+
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache node modules
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cd backend && npm i
+
+      - name: Run Unit test
+        run: cd backend && npm test
