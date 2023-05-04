@@ -57,6 +57,7 @@ jobs:
         run: cd backend && npm run lint
 
   test:
+    name: 🧪 Backend Unit Tests
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -76,3 +77,14 @@ jobs:
 
       - name: Run Unit test
         run: cd backend && npm test
+
+  security-audit:
+    name: 🛡️ Audit Backend Packages for Security Vulnerabilities
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check for security issue
+        run: cd backend && npm audit --audit-level=medium
