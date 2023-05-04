@@ -1,7 +1,7 @@
 name: Continuous Integration
 on: [push]
 jobs:
-  build:
+  be-build:
     runs-on: ubuntu-latest
     steps:
 
@@ -35,8 +35,9 @@ jobs:
           name: backend-artifact
           path: backend/build/artifact.zip
 
-  lint:
-    needs: [build]
+  be-lint:
+    name: 🕵️ Lint Backend Code
+    needs: [be-build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,9 +57,9 @@ jobs:
       - name: Lint the code
         run: cd backend && npm run lint
 
-  test:
+  be-test:
     name: 🧪 Backend Unit Tests
-    needs: [build]
+    needs: [be-build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -78,13 +79,38 @@ jobs:
       - name: Run Unit test
         run: cd backend && npm test
 
-  security-audit:
+  be-security-audit:
     name: 🛡️ Audit Backend Packages for Security Vulnerabilities
-    needs: [ build ]
+    needs: [ be-build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Check for security issue
-        run: cd backend && npm audit --audit-level=medium
+        run: cd backend && npm audit --audit-level=moderate
+
+  static-analysis:
+    name: 🔬 Run Static Analysis on Backend Code
+    needs: [ be-build, be-lint, be-test, be-security-audit ]
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+#        with:
+#          config-file: ./.github/codeql/codeql.config.yml
+#
+#      - name: Setup Node
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: 16.x
+#
+#      - name: Install Deps
+#        run: cd backend && npm i
+#
+#      - name: Build
+#        run: cd backend && npm run build
