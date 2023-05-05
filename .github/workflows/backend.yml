@@ -163,7 +163,7 @@ jobs:
           application_name: phuoc-deploy-nodejs
           environment_name: Phuoc-deploy-nodejs-env
           version_label: Phuoc-deploy-nodejs-env-${{ github.run_number }}
-          region: ap-northeast-1c
+          region: ap-northeast-1
           deployment_package: backend/build/artifact.zip
           use_existing_version_if_available: true
 
