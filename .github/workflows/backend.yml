@@ -160,8 +160,8 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: PhuocFirstDeploy
-          environment_name: PhuocFirstDeploy-env
+          application_name: phuoc-deploy-node
+          environment_name: Phuoc-deploy-node-env
           version_label: PhuocFirstDeploy-${{ github.run_number }}
           region: ap-southeast-1
           deployment_package: backend/build/artifact.zip
@@ -177,7 +177,7 @@ jobs:
 
       - name: Run Smoke Test
         run: |
-          export BACKEND_URL=http://phuoc-first-deploy.ap-southeast-1.elasticbeanstalk.com/
+          export BACKEND_URL=http://http://phuoc-deploy-node-env.eba-tzsuxw4i.ap-southeast-1.elasticbeanstalk.com/
           cd ./backend/e2e
           chmod +x backend-smoke.sh
           ./backend-smoke.sh
