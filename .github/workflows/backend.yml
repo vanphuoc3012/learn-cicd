@@ -165,6 +165,7 @@ jobs:
           version_label: PhuocFirstDeploy-${{ github.run_number }}
           region: ap-southeast-1
           deployment_package: backend/build/artifact.zip
+          use_existing_version_if_available: true
 
   verify-production:
     runs-on: ubuntu-latest
