@@ -178,7 +178,7 @@ jobs:
 
       - name: Run Smoke Test
         run: |
-          export BACKEND_URL=http://http://phuoc-deploy-node-env.eba-tzsuxw4i.ap-southeast-1.elasticbeanstalk.com/
+          export BACKEND_URL=http://phuoc-deploy-nodejs-env.eba-t5itkrxt.ap-northeast-1.elasticbeanstalk.com/
           cd ./backend/e2e
           chmod +x backend-smoke.sh
           ./backend-smoke.sh
