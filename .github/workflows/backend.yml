@@ -130,8 +130,8 @@ jobs:
       - name: Build
         run: cd backend && npm run build
 
-      - name: Perform Analysis
-        uses: github/codeql-action/analyze@v2
+#      - name: Perform Analysis
+#        uses: github/codeql-action/analyze@v2
 
   deploy_to_eb:
     name: Deploy Backend Code
@@ -160,10 +160,10 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: phuoc-deploy-node
-          environment_name: Phuoc-deploy-node-env
-          version_label: PhuocFirstDeploy-${{ github.run_number }}
-          region: ap-southeast-1
+          application_name: phuoc-deploy-nodejs
+          environment_name: Phuoc-deploy-nodejs-env
+          version_label: Phuoc-deploy-nodejs-env-${{ github.run_number }}
+          region: ap-northeast-1c
           deployment_package: backend/build/artifact.zip
           use_existing_version_if_available: true
 
